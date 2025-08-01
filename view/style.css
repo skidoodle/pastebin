@@ -1,0 +1,65 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+}
+
+body {
+    height: 100vh;
+    padding: 2rem;
+    background: #212121;
+    color: #b0bec5;
+    line-height: 1.5;
+    display: flex;
+}
+
+body,
+code,
+textarea {
+    font-family: monospace;
+}
+
+form {
+    flex: 1;
+}
+
+textarea {
+    height: 100%;
+    width: 100%;
+    background: none;
+    border: none;
+    outline: 0;
+    padding: 0;
+    resize: none;
+    overflow: auto;
+    color: inherit;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: inherit;
+}
+
+code {
+    display: block;
+}
+
+pre {
+    background-color: transparent !important;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    overflow: auto;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: inherit;
+}
+
+button[type="submit"] {
+    display: none;
+}
+
+span {
+    min-width: 4em;
+}

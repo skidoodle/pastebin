@@ -1,0 +1,36 @@
+package view
+
+templ BinPreviewPage(id, content string) {
+	@base("bin@" + id) {
+		@templ.Raw(content)
+	}
+}
+
+templ BinEditorPage() {
+	@base("bin") {
+		<form action="/" method="post">
+			<textarea
+				name="content"
+				placeholder="bin something"
+				autofocus
+				autocomplete="off"
+				autocorrent="off"
+				autocapitalize="off"
+				spellcheck="false"
+			></textarea>
+			<button type="submit"></button>
+		</form>
+		<script>
+            const form = document.querySelector('form');
+            const input = document.querySelector('textarea');
+            const button = document.querySelector('button[type="submit"]');
+
+            document.body.addEventListener('keydown', (e) => {
+                if (e.which === 83 && e.ctrlKey) {  // ctrl + s
+                    e.preventDefault();
+                    form.submit();
+                }
+            });
+        </script>
+	}
+}
