@@ -27,7 +27,6 @@ func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	content := r.FormValue("content")
-
 	if content == "" {
 		badRequest("bin cant be empty", nil, w, r)
 		return
