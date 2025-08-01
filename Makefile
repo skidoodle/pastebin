@@ -1,6 +1,6 @@
-run:
+dev:
 	@go tool templ generate
-	@go run .
+	@go run . -addr=":3000" -max-size=32768
 
 gen:
 	@go tool templ generate
@@ -8,5 +8,6 @@ gen:
 test:
 	@go test -v ./...
 
-build:
-	@go build -o bin/main main.go
+run:
+	@go build .
+	@./pastebin -addr=0.0.0.0:8080 -max-size=32768

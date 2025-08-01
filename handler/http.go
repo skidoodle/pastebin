@@ -10,18 +10,29 @@ import (
 )
 
 type HttpHandler struct {
-	store *store.MemoryStore
+	store   *store.MemoryStore
+	maxSize int64
 }
 
-func NewHandler(store *store.MemoryStore) *HttpHandler {
+func NewHandler(store *store.MemoryStore, maxSize int64) *HttpHandler {
 	return &HttpHandler{
-		store: store,
+		store,
+		maxSize,
 	}
 }
 
 func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
+	// form body request looks like:
+	// content=...
+	// so +8 additional bytes must be included
+	r.Body = http.MaxBytesReader(w, r.Body, h.maxSize+8)
+
 	if err := r.ParseForm(); err != nil {
-		badRequest("invalid bin", err, w, r)
+		if strings.Contains(err.Error(), "request body too large") {
+			badRequest("content too large", nil, w, r)
+		} else {
+			badRequest("invalid form data", err, w, r)
+		}
 		return
 	}
 
@@ -30,6 +41,8 @@ func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 		badRequest("bin cant be empty", nil, w, r)
 		return
 	}
+
+	//fmt.Println(len(content))
 
 	id, err := generateId()
 	if err != nil {
