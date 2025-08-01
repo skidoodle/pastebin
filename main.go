@@ -6,7 +6,6 @@ import (
 
 	"github.com/csehviktor/pastebin/handler"
 	"github.com/csehviktor/pastebin/store"
-	"github.com/csehviktor/pastebin/view"
 )
 
 const addr = ":3000"
@@ -19,9 +18,7 @@ func main() {
 	mux.HandleFunc("GET /style.css", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "view/style.css")
 	})
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		handler.Render(view.BinEditorPage(), w, r)
-	})
+	mux.HandleFunc("GET /", httpHandler.HandleHome)
 	mux.HandleFunc("POST /", httpHandler.HandleSet)
 	mux.HandleFunc("GET /{id}", httpHandler.HandleGet)
 

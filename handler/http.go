@@ -66,10 +66,14 @@ func (h *HttpHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(view.BinPreviewPage(id, highlighted), w, r)
+	render(view.BinPreviewPage(id, highlighted), w, r)
 }
 
-func Render(component templ.Component, w http.ResponseWriter, r *http.Request) {
+func (h *HttpHandler) HandleHome(w http.ResponseWriter, r *http.Request) {
+	render(view.BinEditorPage(), w, r)
+}
+
+func render(component templ.Component, w http.ResponseWriter, r *http.Request) {
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		internal("could not render template", err, w, r)
