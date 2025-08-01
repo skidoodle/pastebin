@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/a-h/templ"
 	"github.com/csehviktor/pastebin/store"
 	"github.com/csehviktor/pastebin/view"
 )
@@ -60,7 +59,12 @@ func (h *HttpHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	highlighted, err := highlight(content, ext, "catppuccin-macchiato")
+	theme := r.PathValue("theme")
+	if theme == "" {
+		theme = "catppuccin-macchiato"
+	}
+
+	highlighted, err := highlight(content, ext, theme)
 	if err != nil {
 		internal("could not highlight content", err, w, r)
 		return
@@ -71,11 +75,4 @@ func (h *HttpHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 func (h *HttpHandler) HandleHome(w http.ResponseWriter, r *http.Request) {
 	render(view.BinEditorPage(), w, r)
-}
-
-func render(component templ.Component, w http.ResponseWriter, r *http.Request) {
-	err := component.Render(r.Context(), w)
-	if err != nil {
-		internal("could not render template", err, w, r)
-	}
 }

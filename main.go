@@ -21,6 +21,7 @@ func main() {
 	mux.HandleFunc("GET /", httpHandler.HandleHome)
 	mux.HandleFunc("POST /", httpHandler.HandleSet)
 	mux.HandleFunc("GET /{id}", httpHandler.HandleGet)
+	mux.HandleFunc("GET /{id}/{theme}", httpHandler.HandleGet)
 
 	slog.Info("starting http server on", "addr", addr)
 	err := http.ListenAndServe(addr, mux)
