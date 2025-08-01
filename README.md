@@ -5,13 +5,11 @@ a simple and lightweight pastebin service written in go and templ
 ## Usage
 
 ```
-$ ./pastebin
+$ ./pastebin -help
 
-Usage: pastebin [-addr <port>] [-max-size <size>]
-
-Options:
+Usage of ./pastebin:
   -addr string
-    	port to listen on (default ":3000")
+    	socket address to bind to (default ":3000")
   -max-size int
     	maximum size of a paste in bytes (default 32kB)
 ```
