@@ -2,8 +2,10 @@ package handler
 
 import (
 	"crypto/rand"
+	"net/http"
 	"strings"
 
+	"github.com/a-h/templ"
 	"github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/alecthomas/chroma/v2/styles"
@@ -55,4 +57,11 @@ func highlight(content, ext, theme string) (string, error) {
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+func render(component templ.Component, w http.ResponseWriter, r *http.Request) {
+	err := component.Render(r.Context(), w)
+	if err != nil {
+		internal("could not render template", err, w, r)
+	}
 }
