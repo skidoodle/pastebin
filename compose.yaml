@@ -4,4 +4,4 @@ services:
     image: ghcr.io/csehviktor/pastebin:main
     restart: unless-stopped
     ports:
-      - 3000:3000
+      - "3000:3000"
