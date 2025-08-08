@@ -1,6 +1,7 @@
 services:
   pastebin:
     container_name: pastebin
-    image: ghcr.io/csehviktor/pastebin:latest
+    image: ghcr.io/csehviktor/pastebin:main
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - 3000:3000
