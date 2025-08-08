@@ -1,0 +1,6 @@
+services:
+  pastebin:
+    container_name: pastebin
+    image: ghcr.io/csehviktor/pastebin:latest
+    ports:
+      - "3000:3000"
