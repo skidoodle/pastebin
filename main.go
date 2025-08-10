@@ -37,8 +37,8 @@ func main() {
 	})
 	mux.HandleFunc("GET /", httpHandler.HandleHome)
 	mux.HandleFunc("POST /", httpHandler.HandleSet)
-	mux.HandleFunc("GET /{id}", httpHandler.HandleGet)
-	mux.HandleFunc("GET /{id}/{theme}", httpHandler.HandleGet)
+	mux.HandleFunc("GET /{id}/", httpHandler.HandleGet)
+	mux.HandleFunc("GET /{id}/{theme}/", httpHandler.HandleGet)
 
 	slog.Info("starting http server", "addr", cli.addr, "maxSize", cli.maxSize)
 
