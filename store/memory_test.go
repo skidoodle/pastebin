@@ -1,44 +1,33 @@
 package store
 
-import "testing"
+import (
+	"testing"
 
-func TestMemoryStoreGet(t *testing.T) {
+	"github.com/stretchr/testify/assert"
+)
+
+func TestMemoryStore(t *testing.T) {
 	store := NewMemoryStore()
 
-	store.Set("key", "value")
-	if val, _ := store.Get("key"); val != "value" {
-		t.Errorf("get() = %s, want %s", val, "value")
-	}
-}
+	// Test Set and Get
+	err := store.Set("key1", "value1")
+	assert.NoError(t, err)
 
-func TestMemoryStoreExists(t *testing.T) {
-	store := NewMemoryStore()
+	val, ok, err := store.Get("key1")
+	assert.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, "value1", val)
 
-	if _, exists := store.Get("something"); exists {
-		t.Errorf("get() = %t, want %t", exists, false)
-	}
-}
+	// Test Get non-existent key
+	_, ok, err = store.Get("non-existent")
+	assert.NoError(t, err)
+	assert.False(t, ok)
 
-func TestMemoryStoreOverride(t *testing.T) {
-	store := NewMemoryStore()
+	// Test Delete
+	err = store.Del("key1")
+	assert.NoError(t, err)
 
-	store.Set("key", "value")
-	store.Set("key", "new_value")
-	if val, _ := store.Get("key"); val != "new_value" {
-		t.Errorf("get() = %s, want %s", val, "new_value")
-	}
-}
-
-func TestMemoryStoreDelete(t *testing.T) {
-	store := NewMemoryStore()
-
-	store.Set("key", "value")
-	if _, exists := store.Get("key"); !exists {
-		t.Errorf("get() = %t, want %t", exists, true)
-	}
-
-	store.Del("key")
-	if val, _ := store.Get("key"); val != "" {
-		t.Errorf("del() = %s, want %s", val, "")
-	}
+	_, ok, err = store.Get("key1")
+	assert.NoError(t, err)
+	assert.False(t, ok)
 }

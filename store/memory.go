@@ -1,36 +1,42 @@
 package store
 
-import "sync"
+import (
+	"sync"
+)
 
+// MemoryStore is an in-memory implementation of the Store interface.
 type MemoryStore struct {
 	data map[string]string
-	mx   sync.RWMutex
+	mu   sync.RWMutex
 }
 
+// NewMemoryStore creates a new MemoryStore.
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
 		data: make(map[string]string),
 	}
 }
 
-func (s *MemoryStore) Get(key string) (string, bool) {
-	s.mx.RLock()
-	defer s.mx.RUnlock()
-
-	content, exists := s.data[key]
-	return content, exists
+// Get retrieves a value from the store.
+func (s *MemoryStore) Get(key string) (string, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	val, ok := s.data[key]
+	return val, ok, nil
 }
 
-func (s *MemoryStore) Set(key string, value string) {
-	s.mx.Lock()
-	defer s.mx.Unlock()
-
+// Set adds a value to the store.
+func (s *MemoryStore) Set(key, value string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.data[key] = value
+	return nil
 }
 
-func (s *MemoryStore) Del(key string) {
-	s.mx.Lock()
-	defer s.mx.Unlock()
-
+// Del removes a value from the store.
+func (s *MemoryStore) Del(key string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	delete(s.data, key)
+	return nil
 }

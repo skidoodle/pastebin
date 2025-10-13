@@ -1,5 +1,5 @@
 ADDR_BUILD := ":3000"
-ADDR_DEV := ":6969"
+ADDR_DEV := ":3000"
 
 MAX_SIZE := 32768
 
@@ -10,7 +10,7 @@ APP_NAME := pastebin
 default: dev
 
 .PHONY: dev
-dev:
+dev: gen
 	@go run . -addr="$(ADDR_DEV)" -max-size=$(MAX_SIZE)
 
 .PHONY: gen

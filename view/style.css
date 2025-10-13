@@ -1,3 +1,12 @@
+:root {
+    --background-color: #212121;
+    --text-color: #b0bec5;
+    --scrollbar-track-color: #2c2c2c;
+    --scrollbar-thumb-color: #555;
+    --scrollbar-thumb-hover-color: #888;
+    --spacing: 2rem;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -5,90 +14,106 @@
 html,
 body {
     margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: monospace;
+    font-size: 16px;
 }
 
 body {
-    height: 100vh;
-    padding: 2rem;
-    background: #212121;
-    color: #b0bec5;
-    line-height: 1.5;
+    background: var(--background-color);
+    color: var(--text-color);
     display: flex;
-    font-family: monospace;
-}
-
-body,
-code,
-textarea {
-    font-family: monospace;
+    flex-direction: column;
 }
 
 form {
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
-textarea {
-    height: 100%;
-    width: 100%;
+textarea,
+pre {
+    flex-grow: 1;
+    margin: 0;
+    padding: var(--spacing);
     background: none;
     border: none;
-    outline: 0;
-    padding: 0;
+    outline: none;
     resize: none;
-    overflow: auto;
     color: inherit;
     font-size: 1rem;
-    line-height: inherit;
+    line-height: 1.6;
     font-family: inherit;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
 }
 
 pre {
     background-color: transparent !important;
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    overflow: auto;
-    font-size: 1rem;
-    line-height: inherit;
-    font-family: inherit;
-}
-
-code {
-    display: block;
 }
 
 button[type="submit"] {
     display: none;
 }
 
-span {
-    min-width: 4em;
-}
-
 textarea::-webkit-scrollbar,
 pre::-webkit-scrollbar {
-    width: 10px;
+    width: 12px;
+    height: 12px;
 }
 
 textarea::-webkit-scrollbar-track,
 pre::-webkit-scrollbar-track {
-    background: #2c2c2c;
+    background: var(--scrollbar-track-color);
 }
 
 textarea::-webkit-scrollbar-thumb,
 pre::-webkit-scrollbar-thumb {
-    background-color: #555;
+    background-color: var(--scrollbar-thumb-color);
     border-radius: 6px;
-    border: 2px solid #2c2c2c;
+    border: 3px solid var(--scrollbar-track-color);
 }
 
 textarea::-webkit-scrollbar-thumb:hover,
 pre::-webkit-scrollbar-thumb:hover {
-    background-color: #888;
+    background-color: var(--scrollbar-thumb-hover-color);
 }
 
 textarea,
 pre {
     scrollbar-width: thin;
-    scrollbar-color: #555 #2c2c2c;
+    scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
+}
+
+pre > code > span > span:first-child {
+    display: inline-block;
+    width: 4em;
+    color: #555;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --spacing: 1rem;
+    }
+    html {
+        font-size: 14px;
+    }
 }

@@ -5,31 +5,30 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/csehviktor/pastebin/store"
-	"github.com/csehviktor/pastebin/view"
+	"github.com/skidoodle/pastebin/store"
+	"github.com/skidoodle/pastebin/view"
 )
 
+// HttpHandler handles HTTP requests.
 type HttpHandler struct {
-	store   *store.MemoryStore
+	store   store.Store
 	maxSize int64
 }
 
-func NewHandler(store *store.MemoryStore, maxSize int64) *HttpHandler {
+// NewHandler creates a new HttpHandler.
+func NewHandler(store store.Store, maxSize int64) *HttpHandler {
 	return &HttpHandler{
-		store,
-		maxSize,
+		store:   store,
+		maxSize: maxSize,
 	}
 }
 
+// HandleSet handles the creation of a new paste.
 func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
-	// form body request looks like:
-	// content=...
-	// so +8 additional bytes must be included
-	r.Body = http.MaxBytesReader(w, r.Body, h.maxSize+8)
-
+	r.Body = http.MaxBytesReader(w, r.Body, h.maxSize)
 	if err := r.ParseForm(); err != nil {
 		if strings.Contains(err.Error(), "request body too large") {
-			badRequest("content too large", nil, w, r)
+			badRequest("content too large", err, w, r)
 		} else {
 			badRequest("invalid form data", err, w, r)
 		}
@@ -38,11 +37,9 @@ func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 
 	content := r.FormValue("content")
 	if content == "" {
-		badRequest("bin cant be empty", nil, w, r)
+		badRequest("bin cannot be empty", nil, w, r)
 		return
 	}
-
-	//fmt.Println(len(content))
 
 	id, err := generateId()
 	if err != nil {
@@ -50,23 +47,30 @@ func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.store.Set(id, content)
+	if err := h.store.Set(id, content); err != nil {
+		internal("could not save bin", err, w, r)
+		return
+	}
+
 	slog.Info("created bin", "id", id)
 	http.Redirect(w, r, "/"+id, http.StatusFound)
 }
 
+// HandleGet handles the retrieval of a paste.
 func (h *HttpHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	ext := "txt"
+	var ext string
 
-	if index := strings.Index(id, "."); index > 0 {
-		if index <= len(id) {
-			ext = id[index+1:]
-			id = id[:index]
-		}
+	if index := strings.LastIndex(id, "."); index > 0 {
+		ext = id[index+1:]
+		id = id[:index]
 	}
 
-	content, exists := h.store.Get(id)
+	content, exists, err := h.store.Get(id)
+	if err != nil {
+		internal("could not get bin", err, w, r)
+		return
+	}
 	if !exists {
 		notFound("bin not found", nil, w, r)
 		return
@@ -86,6 +90,7 @@ func (h *HttpHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	render(view.BinPreviewPage(id, highlighted), w, r)
 }
 
+// HandleHome handles the home page.
 func (h *HttpHandler) HandleHome(w http.ResponseWriter, r *http.Request) {
 	render(view.BinEditorPage(), w, r)
 }
