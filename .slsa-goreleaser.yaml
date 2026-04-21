@@ -31,6 +31,49 @@ checksum:
   name_template: 'checksums.txt'
   algorithm: sha256
 
+dockers:
+  - id: pastebin-amd64
+    image_templates:
+      - "ghcr.io/skidoodle/pastebin:{{ .Version }}-amd64"
+    dockerfile: Dockerfile.release
+    goos: linux
+    goarch: amd64
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+    extra_files:
+      - view
+
+  - id: pastebin-arm64
+    image_templates:
+      - "ghcr.io/skidoodle/pastebin:{{ .Version }}-arm64"
+    dockerfile: Dockerfile.release
+    goos: linux
+    goarch: arm64
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+    extra_files:
+      - view
+
+docker_manifests:
+  - name_template: "ghcr.io/skidoodle/pastebin:latest"
+    image_templates:
+      - "ghcr.io/skidoodle/pastebin:{{ .Version }}-amd64"
+      - "ghcr.io/skidoodle/pastebin:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/skidoodle/pastebin:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/skidoodle/pastebin:{{ .Version }}-amd64"
+      - "ghcr.io/skidoodle/pastebin:{{ .Version }}-arm64"
+
 changelog:
   sort: asc
   filters:
