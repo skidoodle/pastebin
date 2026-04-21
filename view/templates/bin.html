@@ -24,40 +24,39 @@
 <main>
     {{ if .IsPreview }}
     <div id="paste-content" class="content-wrapper" style="--digits: {{ .GutterSize }};">
-        <pre><code id="code-block">{{ .Content }}</code></pre>
+        <pre><code id="code-block" data-line-count="{{ .LineCount }}">{{ .Content }}</code></pre>
     </div>
     <script>
         (function () {
             const code = document.getElementById('code-block');
-            const lineCount = {{ .LineCount}
-        };
+            const lineCount = parseInt(code.getAttribute('data-line-count'));
 
-        hljs.highlightElement(code);
+            hljs.highlightElement(code);
 
-        if (lineCount < 5000) {
-            const lines = code.innerHTML.split(/\r?\n/);
-            let finalHtml = '';
-            for (let i = 0; i < lines.length; i++) {
-                const num = i + 1;
-                finalHtml += '<div class="line" id="L' + num + '"><a href="#L' + num + '" class="line-number">' + num + '</a><div class="line-code">' + (lines[i] || ' ') + '</div></div>';
-            }
-            code.innerHTML = finalHtml;
-            code.classList.add('with-line-numbers');
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-                if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
-                    e.preventDefault();
-                    const range = document.createRange();
-                    range.selectNodeContents(code);
-                    const selection = window.getSelection();
-                    selection.removeAllRanges();
-                    selection.addRange(range);
+            if (lineCount < 5000) {
+                const lines = code.innerHTML.split(/\r?\n/);
+                let finalHtml = '';
+                for (let i = 0; i < lines.length; i++) {
+                    const num = i + 1;
+                    finalHtml += '<div class="line" id="L' + num + '"><a href="#L' + num + '" class="line-number">' + num + '</a><div class="line-code">' + (lines[i] || ' ') + '</div></div>';
                 }
+                code.innerHTML = finalHtml;
+                code.classList.add('with-line-numbers');
             }
-        });
-            }) ();
+
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                    if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
+                        e.preventDefault();
+                        const range = document.createRange();
+                        range.selectNodeContents(code);
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                }
+            });
+        })();
     </script>
     {{ else }}
     <div class="content-wrapper">
