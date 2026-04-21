@@ -36,23 +36,40 @@ func parseFlags() *config {
 	return cfg
 }
 
+func securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	cfg := parseFlags()
 
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
-	storage, err := store.NewBoltStore(cfg.dbPath)
+	storage, err := store.NewBoltStore(cfg.dbPath, nil)
 	if err != nil {
 		slog.Error("failed to initialize store", "error", err)
 		os.Exit(1)
 	}
 	defer storage.Close()
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	go func() {
 		ticker := time.NewTicker(1 * time.Hour)
 		defer ticker.Stop()
-		for range ticker.C {
-			storage.Cleanup(cfg.ttl)
+		for {
+			select {
+			case <-ticker.C:
+				storage.Cleanup(cfg.ttl)
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 
@@ -82,7 +99,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    cfg.addr,
-		Handler: mux,
+		Handler: securityHeadersMiddleware(mux),
 	}
 
 	go func() {
@@ -97,10 +114,12 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	cancel()
 
-	if err := server.Shutdown(ctx); err != nil {
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
 		slog.Error("server shutdown failed", "err", err)
 	}
 }

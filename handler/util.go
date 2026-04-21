@@ -5,22 +5,23 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"io"
+	"math/big"
 	"time"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 func generateId() (string, error) {
-	bytes := make([]byte, 10)
-	if _, err := io.ReadFull(rand.Reader, bytes); err != nil {
-		return "", err
+	result := make([]byte, 10)
+	max := big.NewInt(int64(len(charset)))
+	for i := 0; i < 10; i++ {
+		n, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", err
+		}
+		result[i] = charset[n.Int64()]
 	}
-
-	for i := range bytes {
-		bytes[i] = charset[bytes[i]%byte(len(charset))]
-	}
-	return string(bytes), nil
+	return string(result), nil
 }
 
 func TimeAgo(t time.Time) string {

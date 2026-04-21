@@ -87,7 +87,7 @@ func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.store.Set(id, contentHash, content); err != nil {
+	if err := h.store.Set(id, contentHash, content, nil); err != nil {
 		internal("could not save bin", err, w, r)
 		return
 	}

@@ -1,16 +1,34 @@
 package handler
 
 import (
+	"crypto/rand"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
+type errorReader struct{}
+
+func (e errorReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("read error")
+}
+
 func TestGenerateId(t *testing.T) {
 	id, err := generateId()
 	assert.NoError(t, err)
 	assert.Equal(t, 10, len(id))
+}
+
+func TestGenerateIdError(t *testing.T) {
+	originalReader := rand.Reader
+	defer func() { rand.Reader = originalReader }()
+	rand.Reader = errorReader{}
+
+	id, err := generateId()
+	assert.Error(t, err)
+	assert.Empty(t, id)
 }
 
 func TestHash(t *testing.T) {

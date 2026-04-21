@@ -12,6 +12,7 @@
 
     --margin: 1rem;
     --line-height: 1.5;
+    --digits: 1;
     --font-mono: "Fira Code", "JetBrains Mono", "Cascadia Code", "Source Code Pro", "Menlo", "Monaco", "Consolas", monospace;
 }
 

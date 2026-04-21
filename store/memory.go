@@ -32,12 +32,14 @@ func (s *MemoryStore) GetIDByHash(hash string) (string, bool, error) {
 	return id, ok, nil
 }
 
-func (s *MemoryStore) Set(id, hash, content string) error {
+func (s *MemoryStore) Set(id, hash, content string, metadata map[string]interface{}) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.pastes[id] = &Paste{
 		Content:   content,
 		CreatedAt: time.Now(),
+		Hash:      hash,
+		Metadata:  metadata,
 	}
 	s.hashes[hash] = id
 	return nil
@@ -46,6 +48,9 @@ func (s *MemoryStore) Set(id, hash, content string) error {
 func (s *MemoryStore) Del(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if p, ok := s.pastes[id]; ok && p.Hash != "" {
+		delete(s.hashes, p.Hash)
+	}
 	delete(s.pastes, id)
 	return nil
 }

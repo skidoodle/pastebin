@@ -10,11 +10,6 @@ func notFound(slug string, err error, w http.ResponseWriter, r *http.Request) {
 	respondWithError(slug, err, w, r, http.StatusNotFound)
 }
 
-// badRequest handles 400 Bad Request errors.
-func badRequest(slug string, err error, w http.ResponseWriter, r *http.Request) {
-	respondWithError(slug, err, w, r, http.StatusBadRequest)
-}
-
 // internal handles 500 Internal Server Error errors.
 func internal(slug string, err error, w http.ResponseWriter, r *http.Request) {
 	respondWithError(slug, err, w, r, http.StatusInternalServerError)

@@ -14,7 +14,7 @@ func TestMemoryStore(t *testing.T) {
 		hash := "hash1"
 		content := "content1"
 
-		err := s.Set(id, hash, content)
+		err := s.Set(id, hash, content, nil)
 		assert.NoError(t, err)
 
 		p, exists, err := s.Get(id)
@@ -29,7 +29,7 @@ func TestMemoryStore(t *testing.T) {
 		hash := "hash2"
 		content := "content2"
 
-		s.Set(id, hash, content)
+		s.Set(id, hash, content, nil)
 		storedID, exists, err := s.GetIDByHash(hash)
 		assert.NoError(t, err)
 		assert.True(t, exists)
@@ -50,11 +50,14 @@ func TestMemoryStore(t *testing.T) {
 
 	t.Run("Del", func(t *testing.T) {
 		id := "id3"
-		s.Set(id, "h3", "c3")
+		s.Set(id, "h3", "c3", nil)
 		err := s.Del(id)
 		assert.NoError(t, err)
 
 		_, exists, _ := s.Get(id)
 		assert.False(t, exists)
+
+		_, hashExists, _ := s.GetIDByHash("h3")
+		assert.False(t, hashExists)
 	})
 }
