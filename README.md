@@ -1,30 +1,44 @@
 # pastebin
 
-a simple and lightweight pastebin service written in go and templ
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://go.dev/)
+[![Docker Image](https://img.shields.io/badge/Docker-ghcr.io%2Fskidoodle%2Fpastebin-blue?style=flat-square&logo=docker)](https://github.com/skidoodle/pastebin/pkgs/container/pastebin)
 
-## Usage
+A minimalist, high-performance paste service written in Go.
 
+## Deployment
+
+### Docker Compose
+
+```yaml
+services:
+  pastebin:
+    image: ghcr.io/skidoodle/pastebin:latest
+    container_name: pastebin
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/database
 ```
-$ ./pastebin -help
 
-Usage of ./pastebin:
-  -addr string
-    	socket address to bind to (default ":3000")
-  -db-path string
-        path to the database file (default "pastebin.db")
-  -max-size int
-    	maximum size of a paste in bytes (default 32kB)
-  -ttl duration
-        time to live for pastes (e.g., 72h, 30m) (default 168h0m0s)
+### Manual Installation
+
+Requires Go 1.25 or higher.
+
+```bash
+go build -o pastebin .
+./pastebin -addr :3000 -db-path pastebin.db
 ```
 
-## Highlighting
+## Configuration
 
-To get syntax highlighting, you must add the file extension at the end of your paste URL: `/<paste_id>.<extension>`
+| Flag | Description | Default |
+| :--- | :--- | :--- |
+| `-addr` | Socket address to bind to. | `:3000` |
+| `-db-path` | Path to the BoltDB database file. | `pastebin.db` |
+| `-max-size` | Maximum allowed paste size in bytes. | `10485760` |
+| `-ttl` | Time to live for pastes before expiration. | `168h0m0s` |
 
-Supported languages can be found [here](https://github.com/alecthomas/chroma/tree/master?tab=readme-ov-file#supported-languages)
+## License
 
-### Themes
-Themes can be applied by specifying in the URL: `/<paste_id>.<extension>/<theme>`
-
-[List of available themes](https://github.com/alecthomas/chroma/tree/master/styles)
+This project is licensed under the [GNU General Public License v3.0](LICENSE).

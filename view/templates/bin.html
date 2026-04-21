@@ -1,0 +1,80 @@
+{{ define "content" }}
+<nav id="nav">
+    <div class="nav-left">
+        <a href="/" class="title">pastebin</a>
+        <a href="https://github.com/skidoodle/pastebin" class="nav-btn secondary source-link" target="_blank"
+            rel="noopener">Source</a>
+    </div>
+    <div class="nav-right">
+        {{ if .IsPreview }}
+        <div id="metadata">
+            <a href="/" class="nav-btn secondary">New</a>
+            <a href="/raw/{{ .ID }}" class="nav-btn secondary">Raw</a>
+            <span class="meta-item">{{ .TimeAgo }}</span>
+            <span class="meta-separator">/</span>
+            <span class="meta-item">{{ .LineCount }} lines</span>
+        </div>
+        {{ else }}
+        <button id="save-button" class="nav-btn primary" onclick="document.getElementById('paste-form').submit()">Save
+            Paste</button>
+        {{ end }}
+    </div>
+</nav>
+
+<main>
+    {{ if .IsPreview }}
+    <div id="paste-content" class="content-wrapper" style="--digits: {{ .GutterSize }};">
+        <pre><code id="code-block">{{ .Content }}</code></pre>
+    </div>
+    <script>
+        (function () {
+            const code = document.getElementById('code-block');
+            const lineCount = {{ .LineCount}
+        };
+
+        hljs.highlightElement(code);
+
+        if (lineCount < 5000) {
+            const lines = code.innerHTML.split(/\r?\n/);
+            let finalHtml = '';
+            for (let i = 0; i < lines.length; i++) {
+                const num = i + 1;
+                finalHtml += '<div class="line" id="L' + num + '"><a href="#L' + num + '" class="line-number">' + num + '</a><div class="line-code">' + (lines[i] || ' ') + '</div></div>';
+            }
+            code.innerHTML = finalHtml;
+            code.classList.add('with-line-numbers');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    const range = document.createRange();
+                    range.selectNodeContents(code);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            }
+        });
+            }) ();
+    </script>
+    {{ else }}
+    <div class="content-wrapper">
+        <form id="paste-form" action="/" method="post">
+            <label for="content-editor" class="sr-only">Paste Content</label>
+            <textarea id="content-editor" name="content" placeholder="Paste something interesting here..." autofocus
+                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+        </form>
+    </div>
+    <script>
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                document.getElementById('paste-form').submit();
+            }
+        });
+    </script>
+    {{ end }}
+</main>
+{{ end }}

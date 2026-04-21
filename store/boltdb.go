@@ -2,26 +2,20 @@ package store
 
 import (
 	"encoding/json"
-	"log/slog"
 	"time"
 
 	"go.etcd.io/bbolt"
 )
 
-var pastesBucket = []byte("pastes")
+var (
+	pastesBucket = []byte("pastes")
+	hashesBucket = []byte("hashes")
+)
 
-// Paste represents the data stored for each paste.
-type Paste struct {
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
-// BoltStore is a bbolt implementation of the Store interface.
 type BoltStore struct {
 	db *bbolt.DB
 }
 
-// NewBoltStore creates a new BoltStore and initializes the database.
 func NewBoltStore(path string) (*BoltStore, error) {
 	db, err := bbolt.Open(path, 0600, nil)
 	if err != nil {
@@ -29,7 +23,10 @@ func NewBoltStore(path string) (*BoltStore, error) {
 	}
 
 	err = db.Update(func(tx *bbolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(pastesBucket)
+		if _, err := tx.CreateBucketIfNotExists(pastesBucket); err != nil {
+			return err
+		}
+		_, err := tx.CreateBucketIfNotExists(hashesBucket)
 		return err
 	})
 	if err != nil {
@@ -39,96 +36,94 @@ func NewBoltStore(path string) (*BoltStore, error) {
 	return &BoltStore{db: db}, nil
 }
 
-// Get retrieves a value from the store.
-func (s *BoltStore) Get(key string) (string, bool, error) {
+func (s *BoltStore) Get(id string) (*Paste, bool, error) {
 	var paste Paste
+	exists := false
 	err := s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(pastesBucket)
-		val := b.Get([]byte(key))
+		val := b.Get([]byte(id))
 		if val == nil {
-			return nil // Not found
+			return nil
 		}
+		exists = true
 		return json.Unmarshal(val, &paste)
 	})
-
 	if err != nil {
-		return "", false, err
+		return nil, false, err
 	}
-	if paste.Content == "" {
-		return "", false, nil
-	}
-	return paste.Content, true, nil
+	return &paste, exists, nil
 }
 
-// Set adds a value to the store with a timestamp.
-func (s *BoltStore) Set(key, value string) error {
+func (s *BoltStore) GetIDByHash(hash string) (string, bool, error) {
+	var id string
+	exists := false
+	err := s.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(hashesBucket)
+		val := b.Get([]byte(hash))
+		if val == nil {
+			return nil
+		}
+		exists = true
+		id = string(val)
+		return nil
+	})
+	return id, exists, err
+}
+
+func (s *BoltStore) Set(id, hash, content string) error {
 	return s.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket(pastesBucket)
+		pb := tx.Bucket(pastesBucket)
+		hb := tx.Bucket(hashesBucket)
+
 		paste := Paste{
-			Content:   value,
+			Content:   content,
 			CreatedAt: time.Now(),
 		}
 		encoded, err := json.Marshal(paste)
 		if err != nil {
 			return err
 		}
-		return b.Put([]byte(key), encoded)
+
+		if err := pb.Put([]byte(id), encoded); err != nil {
+			return err
+		}
+		return hb.Put([]byte(hash), []byte(id))
 	})
 }
 
-// Del removes a value from the store.
-func (s *BoltStore) Del(key string) error {
+func (s *BoltStore) Del(id string) error {
 	return s.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket(pastesBucket)
-		return b.Delete([]byte(key))
+		return tx.Bucket(pastesBucket).Delete([]byte(id))
 	})
 }
 
-// Cleanup iterates through all pastes and deletes those older than maxAge.
 func (s *BoltStore) Cleanup(maxAge time.Duration) {
-	slog.Info("running cleanup for old pastes")
 	var keysToDelete [][]byte
-	err := s.db.View(func(tx *bbolt.Tx) error {
+	s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(pastesBucket)
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			var paste Paste
-			if err := json.Unmarshal(v, &paste); err != nil {
-				slog.Error("failed to unmarshal paste during cleanup", "key", string(k), "error", err)
-				continue
-			}
-			if time.Since(paste.CreatedAt) > maxAge {
-				keysToDelete = append(keysToDelete, k)
+			var p Paste
+			if err := json.Unmarshal(v, &p); err == nil {
+				if time.Since(p.CreatedAt) > maxAge {
+					keysToDelete = append(keysToDelete, k)
+				}
 			}
 		}
 		return nil
 	})
-	if err != nil {
-		slog.Error("failed to view pastes for cleanup", "error", err)
-		return
-	}
 
 	if len(keysToDelete) > 0 {
-		err = s.db.Update(func(tx *bbolt.Tx) error {
+		s.db.Update(func(tx *bbolt.Tx) error {
 			b := tx.Bucket(pastesBucket)
 			for _, k := range keysToDelete {
-				if err := b.Delete(k); err != nil {
-					return err
-				}
+				b.Delete(k)
 			}
 			return nil
 		})
-		if err != nil {
-			slog.Error("failed to delete old pastes", "error", err)
-		} else {
-			slog.Info("cleanup finished", "deleted_count", len(keysToDelete))
-		}
-	} else {
-		slog.Info("no old pastes to delete")
 	}
 }
 
-// Close closes the database connection.
 func (s *BoltStore) Close() error {
 	return s.db.Close()
 }

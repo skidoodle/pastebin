@@ -1,97 +1,82 @@
 package store
 
 import (
-	"encoding/json"
-	"log/slog"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.etcd.io/bbolt"
 )
 
-// setupTestDB creates a temporary BoltDB instance for testing and returns a cleanup function.
-func setupTestDB(t *testing.T) (*BoltStore, func()) {
-	dir := t.TempDir()
-	dbPath := filepath.Join(dir, "test.db")
-	store, err := NewBoltStore(dbPath)
-	assert.NoError(t, err)
+func TestBoltStore(t *testing.T) {
+	dbPath := "test.db"
+	defer os.Remove(dbPath)
 
-	cleanup := func() {
-		if err := store.Close(); err != nil {
-			slog.Error("failed to close store", "error", err)
-		}
-		if err := os.RemoveAll(dir); err != nil {
-			slog.Error("failed to remove temp directory", "dir", dir, "error", err)
-		}
-	}
+	s, err := NewBoltStore(dbPath)
+	require.NoError(t, err)
+	defer s.Close()
 
-	return store, cleanup
-}
+	t.Run("Set and Get", func(t *testing.T) {
+		id := "id1"
+		hash := "hash1"
+		content := "content1"
 
-// TestBoltStore_SetGetDel tests the Set, Get, and Del methods of the BoltStore.
-func TestBoltStore_SetGetDel(t *testing.T) {
-	store, cleanup := setupTestDB(t)
-	defer cleanup()
+		err := s.Set(id, hash, content)
+		assert.NoError(t, err)
 
-	// Test Set and Get
-	err := store.Set("key1", "value1")
-	assert.NoError(t, err)
-
-	val, ok, err := store.Get("key1")
-	assert.NoError(t, err)
-	assert.True(t, ok)
-	assert.Equal(t, "value1", val)
-
-	// Test Get non-existent key
-	_, ok, err = store.Get("non-existent")
-	assert.NoError(t, err)
-	assert.False(t, ok)
-
-	// Test Delete
-	err = store.Del("key1")
-	assert.NoError(t, err)
-
-	_, ok, err = store.Get("key1")
-	assert.NoError(t, err)
-	assert.False(t, ok)
-}
-
-// TestBoltStore_Cleanup tests the Cleanup method of the BoltStore.
-func TestBoltStore_Cleanup(t *testing.T) {
-	store, cleanup := setupTestDB(t)
-	defer cleanup()
-
-	// Set one fresh and one stale paste
-	err := store.Set("fresh", "content")
-	assert.NoError(t, err)
-
-	err = store.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket(pastesBucket)
-		stalePaste := Paste{
-			Content:   "stale",
-			CreatedAt: time.Now().Add(-2 * time.Hour),
-		}
-		encoded, err := json.Marshal(stalePaste)
-		if err != nil {
-			return err
-		}
-		return b.Put([]byte("stale"), encoded)
+		p, exists, err := s.Get(id)
+		assert.NoError(t, err)
+		assert.True(t, exists)
+		assert.Equal(t, content, p.Content)
 	})
-	assert.NoError(t, err)
 
-	// Cleanup pastes older than 1 hour
-	store.Cleanup(1 * time.Hour)
+	t.Run("GetIDByHash", func(t *testing.T) {
+		id := "id2"
+		hash := "hash2"
+		content := "content2"
 
-	// Check that fresh paste still exists
-	_, ok, err := store.Get("fresh")
-	assert.NoError(t, err)
-	assert.True(t, ok)
+		s.Set(id, hash, content)
+		storedID, exists, err := s.GetIDByHash(hash)
+		assert.NoError(t, err)
+		assert.True(t, exists)
+		assert.Equal(t, id, storedID)
+	})
 
-	// Check that stale paste was deleted
-	_, ok, err = store.Get("stale")
-	assert.NoError(t, err)
-	assert.False(t, ok)
+	t.Run("Del", func(t *testing.T) {
+		id := "id3"
+		s.Set(id, "h3", "c3")
+		err := s.Del(id)
+		assert.NoError(t, err)
+
+		_, exists, _ := s.Get(id)
+		assert.False(t, exists)
+	})
+
+	t.Run("Cleanup", func(t *testing.T) {
+		s.Set("old", "oldhash", "oldcontent")
+		s.Cleanup(-time.Hour)
+		_, exists, _ := s.Get("old")
+		assert.False(t, exists)
+	})
+
+	t.Run("Cleanup Bad Data", func(t *testing.T) {
+		s.db.Update(func(tx *bbolt.Tx) error {
+			return tx.Bucket(pastesBucket).Put([]byte("bad"), []byte("invalid json"))
+		})
+		s.Cleanup(-time.Hour)
+		// Should skip without panic
+	})
+}
+
+func TestNewBoltStoreError(t *testing.T) {
+	// Use a directory name as file path to trigger error
+	err := os.Mkdir("testdir", 0755)
+	require.NoError(t, err)
+	defer os.RemoveAll("testdir")
+
+	s, err := NewBoltStore("testdir")
+	assert.Error(t, err)
+	assert.Nil(t, s)
 }

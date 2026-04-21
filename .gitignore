@@ -1,2 +1,3 @@
 target/
-pastebin.db
+pastebin*
+coverage.out

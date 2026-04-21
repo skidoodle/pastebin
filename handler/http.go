@@ -1,29 +1,45 @@
 package handler
 
 import (
+	"html/template"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/skidoodle/pastebin/store"
-	"github.com/skidoodle/pastebin/view"
 )
 
-// HttpHandler handles HTTP requests.
 type HttpHandler struct {
-	store   store.Store
-	maxSize int64
+	store     store.Store
+	maxSize   int64
+	templates *template.Template
 }
 
-// NewHandler creates a new HttpHandler.
-func NewHandler(store store.Store, maxSize int64) *HttpHandler {
+type ViewData struct {
+	Title      string
+	Content    string
+	ID         string
+	IsPreview  bool
+	TimeAgo    string
+	LineCount  int
+	GutterSize int
+}
+
+func NewHandler(store store.Store, maxSize int64, tmplPattern string) *HttpHandler {
+	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
+		"safeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+	}).ParseGlob(tmplPattern))
+
 	return &HttpHandler{
-		store:   store,
-		maxSize: maxSize,
+		store:     store,
+		maxSize:   maxSize,
+		templates: tmpl,
 	}
 }
 
-// HandleSet handles the creation of a new paste.
 func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, h.maxSize)
 	if err := r.ParseForm(); err != nil {
@@ -41,13 +57,20 @@ func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	contentHash := hash(content)
+	if id, exists, err := h.store.GetIDByHash(contentHash); err == nil && exists {
+		slog.Info("deduplicated bin", "id", id)
+		http.Redirect(w, r, "/"+id, http.StatusFound)
+		return
+	}
+
 	id, err := generateId()
 	if err != nil {
 		internal("could not generate id", err, w, r)
 		return
 	}
 
-	if err := h.store.Set(id, content); err != nil {
+	if err := h.store.Set(id, contentHash, content); err != nil {
 		internal("could not save bin", err, w, r)
 		return
 	}
@@ -56,17 +79,13 @@ func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/"+id, http.StatusFound)
 }
 
-// HandleGet handles the retrieval of a paste.
 func (h *HttpHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	var ext string
-
 	if index := strings.LastIndex(id, "."); index > 0 {
-		ext = id[index+1:]
 		id = id[:index]
 	}
 
-	content, exists, err := h.store.Get(id)
+	paste, exists, err := h.store.Get(id)
 	if err != nil {
 		internal("could not get bin", err, w, r)
 		return
@@ -76,21 +95,49 @@ func (h *HttpHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	theme := r.PathValue("theme")
-	if theme == "" {
-		theme = "catppuccin-macchiato"
+	lineCount := strings.Count(paste.Content, "\n") + 1
+
+	data := ViewData{
+		Title:      "bin@" + id,
+		Content:    paste.Content,
+		ID:         id,
+		IsPreview:  true,
+		TimeAgo:    TimeAgo(paste.CreatedAt),
+		LineCount:  lineCount,
+		GutterSize: len(strconv.Itoa(lineCount)),
 	}
 
-	highlighted, err := highlight(content, ext, theme)
+	if err := h.templates.ExecuteTemplate(w, "base", data); err != nil {
+		internal("could not render template", err, w, r)
+	}
+}
+
+func (h *HttpHandler) HandleRaw(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if index := strings.LastIndex(id, "."); index > 0 {
+		id = id[:index]
+	}
+
+	paste, exists, err := h.store.Get(id)
 	if err != nil {
-		internal("could not highlight content", err, w, r)
+		internal("could not get bin", err, w, r)
+		return
+	}
+	if !exists {
+		notFound("bin not found", nil, w, r)
 		return
 	}
 
-	render(view.BinPreviewPage(id, highlighted), w, r)
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Write([]byte(paste.Content))
 }
 
-// HandleHome handles the home page.
 func (h *HttpHandler) HandleHome(w http.ResponseWriter, r *http.Request) {
-	render(view.BinEditorPage(), w, r)
+	data := ViewData{
+		Title:     "pastebin",
+		IsPreview: false,
+	}
+	if err := h.templates.ExecuteTemplate(w, "base", data); err != nil {
+		internal("could not render template", err, w, r)
+	}
 }

@@ -1,8 +1,15 @@
 package store
 
-// Store is the interface for a key-value store.
+import "time"
+
+type Paste struct {
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
 type Store interface {
-	Get(key string) (string, bool, error)
-	Set(key, value string) error
-	Del(key string) error
+	Get(id string) (*Paste, bool, error)
+	GetIDByHash(hash string) (string, bool, error)
+	Set(id, hash, content string) error
+	Del(id string) error
 }

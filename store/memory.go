@@ -2,41 +2,50 @@ package store
 
 import (
 	"sync"
+	"time"
 )
 
-// MemoryStore is an in-memory implementation of the Store interface.
 type MemoryStore struct {
-	data map[string]string
-	mu   sync.RWMutex
+	pastes map[string]*Paste
+	hashes map[string]string
+	mu     sync.RWMutex
 }
 
-// NewMemoryStore creates a new MemoryStore.
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		data: make(map[string]string),
+		pastes: make(map[string]*Paste),
+		hashes: make(map[string]string),
 	}
 }
 
-// Get retrieves a value from the store.
-func (s *MemoryStore) Get(key string) (string, bool, error) {
+func (s *MemoryStore) Get(id string) (*Paste, bool, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	val, ok := s.data[key]
-	return val, ok, nil
+	p, ok := s.pastes[id]
+	return p, ok, nil
 }
 
-// Set adds a value to the store.
-func (s *MemoryStore) Set(key, value string) error {
+func (s *MemoryStore) GetIDByHash(hash string) (string, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	id, ok := s.hashes[hash]
+	return id, ok, nil
+}
+
+func (s *MemoryStore) Set(id, hash, content string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.data[key] = value
+	s.pastes[id] = &Paste{
+		Content:   content,
+		CreatedAt: time.Now(),
+	}
+	s.hashes[hash] = id
 	return nil
 }
 
-// Del removes a value from the store.
-func (s *MemoryStore) Del(key string) error {
+func (s *MemoryStore) Del(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	delete(s.data, key)
+	delete(s.pastes, id)
 	return nil
 }
