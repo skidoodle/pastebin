@@ -1,4 +1,8 @@
+FROM alpine:latest as certs
+RUN apk --no-cache add ca-certificates
+
 FROM scratch
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY pastebin /pastebin
 COPY view /view
 EXPOSE 3000

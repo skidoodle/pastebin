@@ -33,6 +33,7 @@ checksum:
 
 dockers:
   - id: pastebin-amd64
+    ids: [pastebin]
     image_templates:
       - "ghcr.io/skidoodle/pastebin:{{ .Version }}-amd64"
     dockerfile: Dockerfile.release
@@ -47,8 +48,10 @@ dockers:
       - "--label=org.opencontainers.image.source={{.GitURL}}"
     extra_files:
       - view
+    skip_push: false
 
   - id: pastebin-arm64
+    ids: [pastebin]
     image_templates:
       - "ghcr.io/skidoodle/pastebin:{{ .Version }}-arm64"
     dockerfile: Dockerfile.release
@@ -63,6 +66,7 @@ dockers:
       - "--label=org.opencontainers.image.source={{.GitURL}}"
     extra_files:
       - view
+    skip_push: false
 
 docker_manifests:
   - name_template: "ghcr.io/skidoodle/pastebin:latest"
