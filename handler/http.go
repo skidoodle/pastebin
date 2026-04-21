@@ -47,9 +47,8 @@ func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 		data := ViewData{
 			Title:     "pastebin",
 			IsPreview: false,
-			Content:   r.FormValue("content"),
 		}
-		if strings.Contains(err.Error(), "request body too large") {
+		if strings.Contains(err.Error(), "http: request body too large") {
 			data.Error = "Content too large"
 		} else {
 			data.Error = "Invalid form data"
