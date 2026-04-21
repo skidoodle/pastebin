@@ -1,3 +1,4 @@
 target/
 pastebin*
 coverage.out
+*.db
