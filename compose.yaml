@@ -1,10 +1,10 @@
 services:
   pastebin:
     container_name: pastebin
-    image: ghcr.io/skidoodle/pastebin:main
+    image: ghcr.io/skidoodle/pastebin:latest
     restart: unless-stopped
     ports:
-      - 3000:3000
+      - "3000:3000"
     volumes:
       - pastebin_data:/data
 

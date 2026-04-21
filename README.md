@@ -18,7 +18,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./data:/app/database
+      - ./data:/data
 ```
 
 ### Manual Installation

@@ -1,0 +1,6 @@
+FROM scratch
+COPY pastebin /pastebin
+COPY view /view
+EXPOSE 3000
+VOLUME /data
+ENTRYPOINT ["/pastebin", "-addr", ":3000", "-db-path", "/data/pastebin.db"]
