@@ -60,10 +60,15 @@
     </script>
     {{ else }}
     <div class="content-wrapper">
+        {{ if .Error }}
+        <div class="error-banner">
+            {{ .Error }}
+        </div>
+        {{ end }}
         <form id="paste-form" action="/" method="post">
             <label for="content-editor" class="sr-only">Paste Content</label>
             <textarea id="content-editor" name="content" placeholder="Paste something interesting here..." autofocus
-                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">{{ .Content }}</textarea>
         </form>
     </div>
     <script>

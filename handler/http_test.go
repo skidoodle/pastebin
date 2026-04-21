@@ -91,6 +91,7 @@ func TestHandleSet(t *testing.T) {
 
 		h.HandleSet(rr, req)
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Bin cannot be empty")
 	})
 
 	t.Run("Too Large", func(t *testing.T) {
@@ -102,6 +103,7 @@ func TestHandleSet(t *testing.T) {
 
 		h.HandleSet(rr, req)
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Content too large")
 	})
 
 	t.Run("Malformed Form", func(t *testing.T) {
@@ -111,6 +113,7 @@ func TestHandleSet(t *testing.T) {
 
 		h.HandleSet(rr, req)
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Invalid form data")
 	})
 
 	t.Run("Store Error", func(t *testing.T) {

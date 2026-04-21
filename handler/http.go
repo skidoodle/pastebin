@@ -24,6 +24,7 @@ type ViewData struct {
 	TimeAgo    string
 	LineCount  int
 	GutterSize int
+	Error      string
 }
 
 func NewHandler(store store.Store, maxSize int64, tmplPattern string) *HttpHandler {
@@ -43,17 +44,34 @@ func NewHandler(store store.Store, maxSize int64, tmplPattern string) *HttpHandl
 func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, h.maxSize)
 	if err := r.ParseForm(); err != nil {
+		data := ViewData{
+			Title:     "pastebin",
+			IsPreview: false,
+			Content:   r.FormValue("content"),
+		}
 		if strings.Contains(err.Error(), "request body too large") {
-			badRequest("content too large", err, w, r)
+			data.Error = "Content too large"
 		} else {
-			badRequest("invalid form data", err, w, r)
+			data.Error = "Invalid form data"
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		if err := h.templates.ExecuteTemplate(w, "base", data); err != nil {
+			internal("could not render template", err, w, r)
 		}
 		return
 	}
 
 	content := r.FormValue("content")
 	if content == "" {
-		badRequest("bin cannot be empty", nil, w, r)
+		data := ViewData{
+			Title:     "pastebin",
+			IsPreview: false,
+			Error:     "Bin cannot be empty",
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		if err := h.templates.ExecuteTemplate(w, "base", data); err != nil {
+			internal("could not render template", err, w, r)
+		}
 		return
 	}
 
