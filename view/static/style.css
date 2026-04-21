@@ -1,5 +1,4 @@
 :root {
-    /* Unix/Terminal Aesthetic Palette */
     --bg: #0d1117;
     --text: #c9d1d9;
     --text-dim: #8b949e;
@@ -9,8 +8,8 @@
     --secondary: #21262d;
     --secondary-hover: #30363d;
     --accent: #58a6ff;
-    --highlight: rgba(241, 250, 140, 0.1); /* Subtle Dracula Yellow */
-    
+    --highlight: rgba(241, 250, 140, 0.1);
+
     --margin: 1rem;
     --line-height: 1.5;
     --font-mono: "Fira Code", "JetBrains Mono", "Cascadia Code", "Source Code Pro", "Menlo", "Monaco", "Consolas", monospace;
@@ -22,7 +21,8 @@
     padding: 0;
 }
 
-html, body {
+html,
+body {
     height: 100%;
     width: 100%;
     font-family: var(--font-mono);
@@ -60,7 +60,9 @@ body {
     letter-spacing: -0.02em;
 }
 
-.nav-left .title:hover { color: var(--text); }
+.nav-left .title:hover {
+    color: var(--text);
+}
 
 .source-link {
     font-size: 0.75rem !important;
@@ -89,8 +91,15 @@ body {
     transition: all 0.1s ease;
 }
 
-.primary { background-color: var(--primary); color: #ffffff; }
-.secondary { background-color: var(--secondary); color: var(--text); }
+.primary {
+    background-color: var(--primary);
+    color: #ffffff;
+}
+
+.secondary {
+    background-color: var(--secondary);
+    color: var(--text);
+}
 
 #metadata {
     display: flex;
@@ -139,7 +148,8 @@ textarea {
     overflow: auto;
 }
 
-pre, code {
+pre,
+code {
     background: transparent !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -157,7 +167,6 @@ code.with-line-numbers {
     grid-template-columns: calc(var(--digits, 1) * 1ch + 2rem) minmax(0, 1fr);
     width: 100%;
     min-height: calc(1em * var(--line-height));
-    /* Breathing room when targeting a line */
     scroll-margin-top: 2rem;
 }
 
@@ -186,27 +195,34 @@ code.with-line-numbers {
     word-break: break-all;
 }
 
-/* 
-   Line Highlight via URL Hash (#L315)
-*/
 .line:target {
     background-color: var(--highlight);
 }
 
 .line:target .line-number {
     opacity: 1;
-    color: #f1fa8c; /* Dracula Yellow */
+    color: #f1fa8c;
     border-right-color: #f1fa8c;
     border-right-width: 2px;
 }
 
-/* Selection */
-::selection { background: rgba(59, 130, 246, 0.4); color: #ffffff; }
+::selection {
+    background: rgba(59, 130, 246, 0.4);
+    color: #ffffff;
+}
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--secondary); }
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+}
 
 .sr-only {
     position: absolute;
@@ -221,8 +237,19 @@ code.with-line-numbers {
 }
 
 @media (max-width: 640px) {
-    #metadata { display: none; }
-    .line { grid-template-columns: 1fr; }
-    .line-number { display: none; }
-    .line-code { padding-left: 0; }
+    #metadata {
+        display: none;
+    }
+
+    .line {
+        grid-template-columns: 1fr;
+    }
+
+    .line-number {
+        display: none;
+    }
+
+    .line-code {
+        padding-left: 0;
+    }
 }
