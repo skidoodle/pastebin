@@ -33,15 +33,23 @@
 
             hljs.highlightElement(code);
 
-            if (lineCount < 5000) {
+            if (lineCount < 10000) {
                 const lines = code.innerHTML.split(/\r?\n/);
-                let finalHtml = '';
+                const fragment = [];
                 for (let i = 0; i < lines.length; i++) {
                     const num = i + 1;
-                    finalHtml += '<div class="line" id="L' + num + '"><a href="#L' + num + '" class="line-number">' + num + '</a><div class="line-code">' + (lines[i] || ' ') + '</div></div>';
+                    fragment.push('<div class="line" id="L' + num + '"><a href="#L' + num + '" class="line-number">' + num + '</a><div class="line-code">' + (lines[i] || ' ') + '</div></div>');
                 }
-                code.innerHTML = finalHtml;
-                code.classList.add('with-line-numbers');
+
+                requestAnimationFrame(() => {
+                    code.innerHTML = fragment.join('');
+                    code.classList.add('with-line-numbers');
+
+                    if (window.location.hash) {
+                        const target = document.querySelector(window.location.hash);
+                        if (target) target.scrollIntoView();
+                    }
+                });
             }
 
             document.addEventListener('keydown', (e) => {
