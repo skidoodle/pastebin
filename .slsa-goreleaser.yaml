@@ -1,0 +1,39 @@
+version: 2
+
+builds:
+  - id: pastebin
+    binary: pastebin
+    main: .
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+      - -tags=netgo
+    ldflags:
+      - -s -w -extldflags "-static"
+      - -X main.Version={{.Version}}
+
+archives:
+  - format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: "pastebin_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

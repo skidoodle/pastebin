@@ -15,6 +15,10 @@ import (
 	"github.com/skidoodle/pastebin/store"
 )
 
+var (
+	Version = "devel"
+)
+
 type config struct {
 	addr    string
 	maxSize int64
