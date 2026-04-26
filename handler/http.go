@@ -98,9 +98,6 @@ func (h *HttpHandler) HandleSet(w http.ResponseWriter, r *http.Request) {
 
 func (h *HttpHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if index := strings.LastIndex(id, "."); index > 0 {
-		id = id[:index]
-	}
 
 	paste, exists, err := h.store.Get(id)
 	if err != nil {
@@ -131,9 +128,6 @@ func (h *HttpHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 func (h *HttpHandler) HandleRaw(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if index := strings.LastIndex(id, "."); index > 0 {
-		id = id[:index]
-	}
 
 	paste, exists, err := h.store.Get(id)
 	if err != nil {

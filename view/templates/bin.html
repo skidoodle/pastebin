@@ -24,46 +24,9 @@
 <main>
     {{ if .IsPreview }}
     <div id="paste-content" class="content-wrapper" style="--digits: {{ .GutterSize }};">
+        <div id="line-numbers" class="line-numbers" aria-hidden="true"></div>
         <pre><code id="code-block" data-line-count="{{ .LineCount }}">{{ .Content }}</code></pre>
     </div>
-    <script>
-        (function () {
-            const code = document.getElementById('code-block');
-            const lineCount = parseInt(code.getAttribute('data-line-count'));
-
-            hljs.highlightElement(code);
-
-            const lines = code.innerHTML.split(/\r?\n/);
-            const fragment = [];
-            for (let i = 0; i < lines.length; i++) {
-                const num = i + 1;
-                fragment.push('<div class="line" id="L' + num + '"><a href="#L' + num + '" class="line-number">' + num + '</a><div class="line-code">' + (lines[i] || ' ') + '</div></div>');
-            }
-
-            requestAnimationFrame(() => {
-                code.innerHTML = fragment.join('');
-                code.classList.add('with-line-numbers');
-
-                if (window.location.hash) {
-                    const target = document.querySelector(window.location.hash);
-                    if (target) target.scrollIntoView();
-                }
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-                    if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
-                        e.preventDefault();
-                        const range = document.createRange();
-                        range.selectNodeContents(code);
-                        const selection = window.getSelection();
-                        selection.removeAllRanges();
-                        selection.addRange(range);
-                    }
-                }
-            });
-        })();
-    </script>
     {{ else }}
     <div class="content-wrapper">
         {{ if .Error }}
@@ -77,14 +40,7 @@
                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">{{ .Content }}</textarea>
         </form>
     </div>
-    <script>
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                document.getElementById('paste-form').submit();
-            }
-        });
-    </script>
     {{ end }}
+    <script src="/static/script.js"></script>
 </main>
 {{ end }}

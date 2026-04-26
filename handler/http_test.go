@@ -207,18 +207,6 @@ func TestHandleGet(t *testing.T) {
 		h.HandleGet(rr, req)
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
-
-	t.Run("With Extension", func(t *testing.T) {
-		id := "testid"
-		s.On("Get", id).Return(&store.Paste{Content: "hello", CreatedAt: time.Now()}, true, nil).Once()
-		req := httptest.NewRequest("GET", "/"+id+".go", nil)
-		req.SetPathValue("id", id+".go")
-		rr := httptest.NewRecorder()
-
-		h.HandleGet(rr, req)
-		assert.Equal(t, http.StatusOK, rr.Code)
-		assert.Contains(t, rr.Body.String(), "hello")
-	})
 }
 
 type FailingResponseWriter struct {
@@ -260,19 +248,6 @@ func TestHandleRaw(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rr.Code)
 		assert.Equal(t, content, rr.Body.String())
 		assert.Equal(t, "text/plain; charset=utf-8", rr.Header().Get("Content-Type"))
-	})
-
-	t.Run("With Extension", func(t *testing.T) {
-		id := "testid"
-		content := "raw content"
-		s.On("Get", id).Return(&store.Paste{Content: content}, true, nil).Once()
-		req := httptest.NewRequest("GET", "/raw/"+id+".txt", nil)
-		req.SetPathValue("id", id+".txt")
-		rr := httptest.NewRecorder()
-
-		h.HandleRaw(rr, req)
-		assert.Equal(t, http.StatusOK, rr.Code)
-		assert.Equal(t, content, rr.Body.String())
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
